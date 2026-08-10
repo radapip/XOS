@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"/>
+<meta name="theme-color" content="#0b0e18"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="XOS Preview"/>
+<title>XOS — RJ Phone OS Preview</title>
+<style>
+:root{
+  --accent:#8b5cf6;
+  --accent2:#39d8ff;
+  --glass:rgba(255,255,255,.13);
+  --glass-strong:rgba(255,255,255,.20);
+  --line:rgba(255,255,255,.18);
+  --text:#fff;
+  --muted:rgba(255,255,255,.70);
+  --shadow:0 18px 60px rgba(0,0,0,.30);
+  --blur:26px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#070912;color:var(--text);font-family:Inter,-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif}
+button,input{font:inherit}
+button{color:inherit}
+#phone{
+  position:fixed; inset:0; overflow:hidden; isolation:isolate;
+  background:
+   radial-gradient(circle at 20% 12%, rgba(85,71,255,.72), transparent 28%),
+   radial-gradient(circle at 80% 28%, rgba(0,217,255,.54), transparent 30%),
+   radial-gradient(circle at 50% 88%, rgba(255,82,177,.34), transparent 30%),
+   linear-gradient(150deg,#0b0d1c 0%,#151835 42%,#080a13 100%);
+}
+#phone::before{
+  content:""; position:absolute; inset:-20%; z-index:-1; opacity:.9;
+  background:conic-gradient(from 110deg at 50% 50%,transparent 0 14%,rgba(255,255,255,.06) 15% 17%,transparent 18% 47%,rgba(91,63,255,.18) 48% 55%,transparent 56%);
+  filter:blur(30px); animation:floatbg 14s ease-in-out infinite alternate;
+}
+@keyframes floatbg{to{transform:translate3d(5%,-3%,0) rotate(6deg) scale(1.06)}}
+.status{
+  height:max(44px,env(safe-area-inset-top)); padding:max(10px,env(safe-area-inset-top)) 18px 0;
+  position:absolute; inset:0 0 auto; z-index:50; display:flex; align-items:flex-start; justify-content:space-between;
+  font-size:13px;font-weight:700;text-shadow:0 1px 8px rgba(0,0,0,.5); pointer-events:none;
+}
+.status-right{display:flex;gap:7px;align-items:center}
+.signal{letter-spacing:-2px;font-size:12px}.battery{width:23px;height:11px;border:1.5px solid #fff;border-radius:3px;position:relative}.battery::after{content:"";position:absolute;right:-3px;top:3px;width:2px;height:4px;background:#fff;border-radius:1px}.battery i{display:block;width:74%;height:100%;background:#fff;border-radius:1px}
+.dynamic-bubble{
+  position:absolute;top:max(9px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:80;
+  min-width:112px;height:31px;border:0;border-radius:18px;background:#030304;box-shadow:0 2px 14px rgba(0,0,0,.45);
+  display:flex;align-items:center;justify-content:center;gap:8px;padding:0 13px;font-size:11px;font-weight:700;cursor:pointer;
+  transition:.3s cubic-bezier(.2,.9,.2,1); overflow:hidden;
+}
+.dynamic-bubble:hover,.dynamic-bubble.expanded{min-width:164px;height:40px;border-radius:22px}
+.db-dot{width:7px;height:7px;border-radius:50%;background:linear-gradient(135deg,var(--accent2),var(--accent));box-shadow:0 0 12px var(--accent2)}
+.screen{position:absolute;inset:0;transition:.48s cubic-bezier(.2,.9,.2,1)}
+.hidden{opacity:0;pointer-events:none;transform:scale(1.035)}
+.lock{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:16vh}
+.lock-date{font-size:18px;font-weight:600;color:rgba(255,255,255,.84);margin-bottom:0}
+.lock-time{font-size:clamp(74px,24vw,118px);line-height:.93;font-weight:300;letter-spacing:-6px;margin-top:4px}
+.lock-widget{
+  margin-top:34px;width:min(88%,390px);padding:16px 18px;border-radius:28px;background:var(--glass);border:1px solid var(--line);
+  backdrop-filter:blur(var(--blur));-webkit-backdrop-filter:blur(var(--blur));box-shadow:var(--shadow)
+}
+.lock-widget .row{display:flex;align-items:center;justify-content:space-between}
+.pill{display:inline-flex;gap:7px;align-items:center;padding:8px 11px;border-radius:99px;background:rgba(255,255,255,.1)}
+.unlock{
+  position:absolute;bottom:calc(26px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
+  width:min(86%,380px);height:58px;border:1px solid var(--line);border-radius:30px;background:rgba(255,255,255,.11);
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);font-weight:800;font-size:15px;box-shadow:var(--shadow);cursor:pointer
+}
+.home{padding:80px 18px calc(105px + env(safe-area-inset-bottom))}
+.home-header{display:flex;align-items:end;justify-content:space-between;padding:10px 2px 15px}
+.home-title{font-size:34px;font-weight:800;letter-spacing:-1.3px}.home-sub{font-size:13px;color:var(--muted);margin-top:3px}
+.weather-mini{text-align:right}.weather-mini strong{font-size:23px}.weather-mini div{font-size:12px;color:var(--muted)}
+.apps{display:grid;grid-template-columns:repeat(4,1fr);gap:22px 12px;align-content:start}
+.app{display:flex;flex-direction:column;gap:7px;align-items:center;text-align:center;font-size:11px;cursor:pointer;user-select:none}
+.icon{
+  width:min(15.5vw,67px);height:min(15.5vw,67px);min-width:56px;min-height:56px;border-radius:20px;display:grid;place-items:center;
+  font-size:27px;border:1px solid rgba(255,255,255,.22);box-shadow:0 10px 26px rgba(0,0,0,.22),inset 0 1px rgba(255,255,255,.15);
+  background:linear-gradient(145deg,rgba(255,255,255,.25),rgba(255,255,255,.08));backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  transition:.12s
+}
+.app:active .icon{transform:scale(.91)}
+.icon.sali{background:radial-gradient(circle at 25% 20%,#65f2ff 0 5%,transparent 26%),linear-gradient(145deg,#6d4aff,#162347)}
+.icon.think{background:linear-gradient(145deg,#0e2436,#0aa0af 55%,#61ffd3)}
+.icon.settings{background:linear-gradient(145deg,#6b7280,#262a32)}
+.icon.camera{background:linear-gradient(145deg,#24252c,#090a0d)}
+.icon.photos{background:conic-gradient(#ff5e78,#ffc93d,#71f36c,#46b7ff,#aa63ff,#ff5e78)}
+.icon.music{background:linear-gradient(145deg,#ff4d9f,#6d37ff)}
+.icon.notes{background:linear-gradient(145deg,#ffd84b,#fff4ab);color:#5a4300}
+.icon.clock{background:linear-gradient(145deg,#252631,#060609)}
+.icon.messages{background:linear-gradient(145deg,#61f18a,#17a94f)}
+.icon.weather{background:linear-gradient(145deg,#59c5ff,#2254de)}
+.icon.browser{background:linear-gradient(145deg,#57ecff,#1d56ec)}
+.icon.store{background:linear-gradient(145deg,#65b5ff,#7e55ff)}
+.dock{
+  position:absolute;bottom:calc(11px + env(safe-area-inset-bottom));left:12px;right:12px;height:82px;border-radius:30px;
+  background:rgba(255,255,255,.14);border:1px solid var(--line);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
+  display:grid;grid-template-columns:repeat(4,1fr);align-items:center;padding:8px 10px;box-shadow:var(--shadow)
+}
+.dock .app span{display:none}.dock .app{gap:0}.dock .icon{width:58px;height:58px;min-width:0;min-height:0}
+.overlay{position:absolute;inset:0;z-index:100;background:rgba(3,4,9,.42);backdrop-filter:blur(11px);-webkit-backdrop-filter:blur(11px);padding:75px 14px 20px;transition:.3s}
+.overlay.hidden{transform:translateY(-8px) scale(.99)}
+.cc-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:450px;margin:auto}
+.card{border:1px solid var(--line);background:rgba(21,23,35,.68);border-radius:28px;padding:16px;box-shadow:var(--shadow)}
+.card h3{margin:0 0 10px;font-size:15px}.toggles{display:grid;grid-template-columns:1fr 1fr;gap:10px}.toggle{height:54px;border:0;border-radius:18px;background:rgba(255,255,255,.1);cursor:pointer;font-size:21px}.toggle.on{background:linear-gradient(145deg,var(--accent),#366cff)}
+.range{width:100%;accent-color:#fff}
+.now-playing{grid-column:1/-1;display:flex;gap:13px;align-items:center}.album{width:54px;height:54px;border-radius:15px;background:linear-gradient(135deg,#ff4d9f,#6d37ff);display:grid;place-items:center;font-size:25px}
+.app-screen{position:absolute;inset:0;z-index:90;background:rgba(8,10,17,.84);backdrop-filter:blur(36px);-webkit-backdrop-filter:blur(36px);padding-top:max(52px,calc(env(safe-area-inset-top) + 45px));transition:.34s cubic-bezier(.2,.9,.2,1)}
+.app-screen.hidden{transform:translateY(100%);opacity:1}
+.app-top{height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 18px}.app-top h2{font-size:24px;margin:0;letter-spacing:-.6px}.back{border:0;background:rgba(255,255,255,.10);border-radius:15px;padding:9px 12px;cursor:pointer}
+.content{height:calc(100% - 48px - env(safe-area-inset-bottom));overflow:auto;padding:8px 16px 92px;overscroll-behavior:contain}
+.hero{padding:22px;border-radius:30px;background:linear-gradient(135deg,rgba(108,78,255,.42),rgba(43,211,255,.16));border:1px solid var(--line);margin-bottom:14px}
+.hero h1{font-size:30px;margin:3px 0 6px;letter-spacing:-1px}.muted{color:var(--muted)}
+.chat{display:flex;flex-direction:column;gap:10px;margin-top:16px}.bubble{max-width:82%;padding:12px 14px;border-radius:19px;background:rgba(255,255,255,.11);border:1px solid rgba(255,255,255,.10)}.bubble.me{align-self:flex-end;background:linear-gradient(135deg,var(--accent),#4469ff)}
+.composer{position:absolute;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));display:flex;gap:8px;padding:8px;border-radius:24px;background:rgba(24,26,36,.86);border:1px solid var(--line);backdrop-filter:blur(18px)}
+.composer input{flex:1;border:0;outline:none;background:transparent;color:#fff;padding:0 10px;min-width:0}.composer button{border:0;border-radius:18px;background:linear-gradient(135deg,var(--accent),#396cff);padding:10px 14px;font-weight:800}
+.settings-list{display:flex;flex-direction:column;gap:10px}.setting{display:flex;align-items:center;justify-content:space-between;padding:15px 16px;border-radius:21px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.10)}
+.sw{width:48px;height:29px;background:rgba(255,255,255,.16);border-radius:18px;padding:3px;cursor:pointer;transition:.2s}.sw i{display:block;width:23px;height:23px;border-radius:50%;background:white;transition:.2s}.sw.on{background:#48d46b}.sw.on i{transform:translateX(19px)}
+.color-row{display:flex;gap:9px}.color{width:27px;height:27px;border-radius:50%;border:2px solid rgba(255,255,255,.3);cursor:pointer}.color.selected{border-color:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.16)}
+.think-score{font-size:68px;line-height:1;font-weight:850;letter-spacing:-4px;background:linear-gradient(120deg,#fff,#66ffe0);-webkit-background-clip:text;color:transparent}.progress{height:10px;border-radius:8px;background:rgba(255,255,255,.10);overflow:hidden}.progress i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--accent2),#73ffc7);width:76%}
+.quick3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.mini{padding:13px;border-radius:20px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.1);font-size:12px}.mini b{font-size:18px;display:block;margin-bottom:5px}
+.priority{position:absolute;top:56px;left:50%;transform:translateX(-50%);z-index:130;width:min(92%,420px);border-radius:30px;padding:14px;background:rgba(10,11,17,.88);border:1px solid var(--line);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);box-shadow:var(--shadow);transition:.25s}
+.priority.hidden{transform:translateX(-50%) translateY(-10px) scale(.96)}
+.priority h3{margin:4px 6px 11px}.priority-item{display:flex;gap:12px;align-items:center;padding:12px;border-radius:20px;background:rgba(255,255,255,.08);margin-top:8px}.picon{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:rgba(255,255,255,.12);font-size:21px}.priority-item b{display:block;font-size:13px}.priority-item small{color:var(--muted)}
+.home-indicator{position:absolute;bottom:max(5px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:130px;height:5px;border-radius:5px;background:#fff;z-index:120;opacity:.92;cursor:pointer}
+.camera-view{height:70vh;border-radius:28px;overflow:hidden;background:radial-gradient(circle at 65% 35%,#b4d6ff,transparent 17%),linear-gradient(160deg,#233342,#111925 45%,#080a0d);position:relative;border:1px solid var(--line)}.camera-view:before{content:"XOS CAMERA";position:absolute;top:18px;left:18px;font-size:12px;font-weight:800;letter-spacing:1.2px}.shutter{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);width:70px;height:70px;border-radius:50%;border:5px solid white;background:rgba(255,255,255,.18)}
+.note{padding:15px;border-radius:20px;background:rgba(255,255,255,.08);margin-bottom:10px;border:1px solid rgba(255,255,255,.1)}
+@media(min-width:700px){
+ #phone{width:430px;height:900px;inset:50% auto auto 50%;transform:translate(-50%,-50%);border-radius:56px;box-shadow:0 30px 100px #000;border:7px solid #202127}
+ body{background:radial-gradient(circle at 50% 20%,#1d2147,#06070b 55%)}
+ .status{padding-top:15px}.dynamic-bubble{top:12px}
+}
+</style>
+</head>
+<body>
+<div id="phone">
+  <div class="status"><span id="statusTime">9:41</span><span class="status-right"><span class="signal">▂▄▆█</span><span>5G</span><span class="battery"><i></i></span></span></div>
+  <button class="dynamic-bubble" id="dynamicBubble"><i class="db-dot"></i><span id="dbText">Priority Move</span></button>
+
+  <section class="screen lock" id="lockScreen">
+    <div class="lock-date" id="lockDate">Monday, August 10</div>
+    <div class="lock-time" id="lockTime">09:41</div>
+    <div class="lock-widget">
+      <div class="row"><span class="pill">✦ Intelligent Think</span><b>76%</b></div>
+      <p style="margin:12px 0 4px;font-size:13px;color:var(--muted)">Your day is light. Best focus window: 10:30–12:00.</p>
+    </div>
+    <button class="unlock" id="unlockBtn">Swipe up to enter XOS ↑</button>
+  </section>
+
+  <section class="screen home hidden" id="homeScreen">
+    <div class="home-header">
+      <div><div class="home-title">Good morning.</div><div class="home-sub">XOS • Intelligent Think is ready</div></div>
+      <div class="weather-mini"><strong>24°</strong><div>Clear</div></div>
+    </div>
+    <div class="apps">
+      <div class="app" data-app="sali"><div class="icon sali">✦</div><span>Sali</span></div>
+      <div class="app" data-app="think"><div class="icon think">◈</div><span>Think</span></div>
+      <div class="app" data-app="camera"><div class="icon camera">◉</div><span>Camera</span></div>
+      <div class="app" data-app="photos"><div class="icon photos">✿</div><span>Photos</span></div>
+      <div class="app" data-app="messages"><div class="icon messages">●</div><span>Messages</span></div>
+      <div class="app" data-app="music"><div class="icon music">♫</div><span>Music</span></div>
+      <div class="app" data-app="notes"><div class="icon notes">≡</div><span>Notes</span></div>
+      <div class="app" data-app="clock"><div class="icon clock">◷</div><span>Clock</span></div>
+      <div class="app" data-app="weather"><div class="icon weather">☀︎</div><span>Weather</span></div>
+      <div class="app" data-app="browser"><div class="icon browser">◎</div><span>SurfNet</span></div>
+      <div class="app" data-app="store"><div class="icon store">A</div><span>RJ Store</span></div>
+      <div class="app" data-app="settings"><div class="icon settings">⚙</div><span>Settings</span></div>
+    </div>
+    <div class="dock">
+      <div class="app" data-app="messages"><div class="icon messages">●</div><span>Messages</span></div>
+      <div class="app" data-app="browser"><div class="icon browser">◎</div><span>SurfNet</span></div>
+      <div class="app" data-app="music"><div class="icon music">♫</div><span>Music</span></div>
+      <div class="app" data-app="camera"><div class="icon camera">◉</div><span>Camera</span></div>
+    </div>
+  </section>
+
+  <section class="overlay hidden" id="controlCenter">
+    <div class="cc-grid">
+      <div class="card"><h3>Connections</h3><div class="toggles"><button class="toggle on">⌁</button><button class="toggle on">ᯤ</button><button class="toggle">⌁</button><button class="toggle">◉</button></div></div>
+      <div class="card"><h3>Display</h3><div style="font-size:12px;color:var(--muted);margin-bottom:10px">Brightness</div><input class="range" type="range" min="25" max="100" value="82" id="brightness"></div>
+      <div class="card now-playing"><div class="album">♫</div><div><b>Glass Horizon</b><div class="muted" style="font-size:12px">RJ Sound • Playing</div></div><div style="margin-left:auto">Ⅱ</div></div>
+    </div>
+  </section>
+
+  <section class="priority hidden" id="priorityPanel">
+    <h3>Priority Move</h3>
+    <div class="priority-item"><div class="picon">✦</div><div><b>Continue with Sali</b><small>Your last assistant session</small></div></div>
+    <div class="priority-item"><div class="picon">♫</div><div><b>Resume music</b><small>Glass Horizon • 2:18 remaining</small></div></div>
+    <div class="priority-item"><div class="picon">≡</div><div><b>Open project notes</b><small>Edited recently</small></div></div>
+  </section>
+
+  <section class="app-screen hidden" id="appScreen">
+    <div class="app-top"><button class="back" id="backBtn">‹ Home</button><h2 id="appTitle">App</h2><button class="back" id="ccBtn">⌁</button></div>
+    <div class="content" id="appContent"></div>
+  </section>
+
+  <div class="home-indicator" id="homeIndicator"></div>
+</div>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
+const lock=$("#lockScreen"), home=$("#homeScreen"), app=$("#appScreen"), appContent=$("#appContent"), appTitle=$("#appTitle");
+const cc=$("#controlCenter"), priority=$("#priorityPanel"), db=$("#dynamicBubble");
+let unlocked=false, currentApp=null;
+
+function timeUpdate(){
+ const d=new Date(), hh=d.getHours(), mm=String(d.getMinutes()).padStart(2,"0");
+ const t=`${String(hh).padStart(2,"0")}:${mm}`;
+ $("#lockTime").textContent=t; $("#statusTime").textContent=`${hh}:${mm}`;
+ $("#lockDate").textContent=d.toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"});
+}
+timeUpdate(); setInterval(timeUpdate,15000);
+
+function unlock(){
+ unlocked=true; lock.classList.add("hidden"); home.classList.remove("hidden");
+}
+$("#unlockBtn").onclick=unlock;
+let sy=0;
+lock.addEventListener("touchstart",e=>sy=e.touches[0].clientY,{passive:true});
+lock.addEventListener("touchend",e=>{if(sy-e.changedTouches[0].clientY>45)unlock()},{passive:true});
+
+db.onclick=(e)=>{
+ e.stopPropagation();
+ if(!unlocked) return;
+ priority.classList.toggle("hidden"); db.classList.toggle("expanded");
+};
+document.addEventListener("click",e=>{if(!priority.contains(e.target)&&e.target!==db){priority.classList.add("hidden");db.classList.remove("expanded")}});
+
+function closeAll(){
+ app.classList.add("hidden"); cc.classList.add("hidden"); priority.classList.add("hidden"); db.classList.remove("expanded"); currentApp=null;
+ if(unlocked) home.classList.remove("hidden");
+}
+$("#homeIndicator").onclick=closeAll; $("#backBtn").onclick=closeAll;
+$("#ccBtn").onclick=()=>cc.classList.toggle("hidden");
+$(".status-right").onclick=()=>{ if(unlocked) cc.classList.toggle("hidden") };
+$$(".toggle").forEach(x=>x.onclick=()=>x.classList.toggle("on"));
+$("#brightness").oninput=e=>{$("#phone").style.filter=`brightness(${e.target.value/82})`};
+
+const apps={
+ sali:{
+  title:"Sali",
+  html:`<div class="hero"><div class="muted">RJ Intelligence</div><h1>Hey. What are we building?</h1><div class="muted">Sali works with Intelligent Think to keep replies personal to you.</div></div>
+  <div class="chat" id="chat"><div class="bubble">Welcome to XOS. I can help with your day, apps, ideas, and device controls.</div><div class="bubble me">Show me what XOS can do.</div><div class="bubble">Try tapping the Dynamic Bubble for Priority Move, or open Think to see your private on-device intelligence dashboard.</div></div>
+  <div class="composer"><input id="chatInput" placeholder="Message Sali…"><button id="sendChat">↑</button></div>`
+ },
+ think:{
+  title:"Intelligent Think",
+  html:`<div class="hero"><div class="muted">Personal intelligence • On-device</div><h1>Your IT profile</h1><div class="think-score">76%</div><div class="muted" style="margin:8px 0 14px">Personal model confidence</div><div class="progress"><i></i></div></div>
+  <div class="quick3"><div class="mini"><b>12</b>routines learned</div><div class="mini"><b>8</b>app patterns</div><div class="mini"><b>4</b>focus windows</div></div>
+  <div class="note" style="margin-top:12px"><b>Private by design</b><div class="muted" style="font-size:13px;margin-top:5px">This concept keeps your personal model on the device and uses it to prioritize actions across XOS.</div></div>
+  <div class="note"><b>Next prediction</b><div class="muted" style="font-size:13px;margin-top:5px">You may want Music around 11:15, followed by project Notes.</div></div>`
+ },
+ settings:{
+  title:"Settings",
+  html:`<div class="hero"><div class="muted">XOS Preview</div><h1>Make it yours.</h1></div>
+  <div class="settings-list">
+   <div class="setting"><div><b>Intelligent Think</b><div class="muted" style="font-size:12px">Personal on-device learning</div></div><div class="sw on"><i></i></div></div>
+   <div class="setting"><div><b>Priority Move</b><div class="muted" style="font-size:12px">Dynamic Bubble suggestions</div></div><div class="sw on"><i></i></div></div>
+   <div class="setting"><div><b>Glass Motion</b><div class="muted" style="font-size:12px">Depth and blur effects</div></div><div class="sw on"><i></i></div></div>
+   <div class="setting"><div><b>Accent</b></div><div class="color-row"><span class="color selected" data-color="#8b5cf6" style="background:#8b5cf6"></span><span class="color" data-color="#26c8ff" style="background:#26c8ff"></span><span class="color" data-color="#ff4f9a" style="background:#ff4f9a"></span><span class="color" data-color="#47dc83" style="background:#47dc83"></span></div></div>
+   <div class="setting"><div><b>XOS</b><div class="muted" style="font-size:12px">Concept build 1.0 • RJ</div></div><span>›</span></div>
+  </div>`
+ },
+ camera:{title:"Camera",html:`<div class="camera-view"><button class="shutter" aria-label="shutter"></button></div><p class="muted" style="text-align:center;font-size:12px">Camera interface concept • visual preview only</p>`},
+ notes:{title:"Notes",html:`<div class="hero"><div class="muted">Today</div><h1>Project Notes</h1></div><div class="note"><b>XOS ideas</b><div class="muted">Dynamic Bubble • Sali • Intelligent Think • fluid glass UI</div></div><div class="note"><b>Next build</b><div class="muted">Add real apps, notifications, widgets and device mockups.</div></div>`},
+ music:{title:"Music",html:`<div class="hero" style="text-align:center;padding:35px 22px"><div style="font-size:72px">♫</div><h1>Glass Horizon</h1><div class="muted">RJ Sound</div><div class="progress" style="margin-top:22px"><i style="width:58%"></i></div><div style="display:flex;justify-content:center;gap:34px;font-size:30px;margin-top:24px"><span>‹‹</span><span>Ⅱ</span><span>››</span></div></div>`},
+ messages:{title:"Messages",html:`<div class="note"><b>RJ Team</b><div class="muted">XOS preview is looking clean 🔥</div></div><div class="note"><b>Sean</b><div class="muted">Yo bro 👋</div></div><div class="note"><b>Family</b><div class="muted">See you later</div></div>`},
+ clock:{title:"Clock",html:`<div class="hero" style="text-align:center"><div class="muted">Local time</div><div id="bigClock" style="font-size:68px;font-weight:300;letter-spacing:-3px;margin:8px 0">09:41</div><div class="muted">Alarm • Stopwatch • Timer</div></div>`},
+ weather:{title:"Weather",html:`<div class="hero"><div class="muted">Preview weather</div><h1 style="font-size:64px">24° ☀︎</h1><div>Clear • H: 29° L: 18°</div></div><div class="quick3"><div class="mini"><b>10%</b>Rain</div><div class="mini"><b>48%</b>Humidity</div><div class="mini"><b>8</b>UV</div></div><p class="muted" style="font-size:12px">Demo data in this offline prototype.</p>`},
+ browser:{title:"SurfNet",html:`<div class="hero"><div class="muted">XOS browser concept</div><h1>SurfNet</h1><div class="setting" style="margin-top:14px"><span class="muted">Search or enter website</span><span>↗</span></div></div><div class="quick3"><div class="mini"><b>RJ</b>Home</div><div class="mini"><b>✦</b>Sali</div><div class="mini"><b>◈</b>Think</div></div>`},
+ store:{title:"RJ Store",html:`<div class="hero"><div class="muted">Designed for XOS</div><h1>Discover apps.</h1></div><div class="note"><b>Focus Flow</b><div class="muted">Productivity • Free</div></div><div class="note"><b>Orbit</b><div class="muted">Social • Free</div></div><div class="note"><b>Studio</b><div class="muted">Creativity • Free</div></div>`},
+ photos:{title:"Photos",html:`<div class="hero"><div class="muted">Memories</div><h1>Your Library</h1></div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px">${Array.from({length:12},(_,i)=>`<div style="aspect-ratio:1;border-radius:14px;background:linear-gradient(${20+i*23}deg,hsl(${220+i*17} 80% 55%),hsl(${300+i*13} 70% 45%));border:1px solid rgba(255,255,255,.12)"></div>`).join("")}</div>`}
+};
+
+function wireDynamic(appName){
+ if(appName==="sali"){
+  const input=$("#chatInput"), send=$("#sendChat"), chat=$("#chat");
+  const go=()=>{const v=input.value.trim(); if(!v)return; chat.insertAdjacentHTML("beforeend",`<div class="bubble me">${v.replace(/[<>]/g,"")}</div><div class="bubble">This is the preview build, so Sali’s live AI brain isn’t connected yet — but the interface is ready for it.</div>`); input.value=""; appContent.scrollTop=appContent.scrollHeight};
+  send.onclick=go; input.onkeydown=e=>{if(e.key==="Enter")go()}
+ }
+ if(appName==="settings"){
+  $$(".sw").forEach(x=>x.onclick=()=>x.classList.toggle("on"));
+  $$(".color").forEach(c=>c.onclick=()=>{
+    $$(".color").forEach(x=>x.classList.remove("selected")); c.classList.add("selected");
+    document.documentElement.style.setProperty("--accent",c.dataset.color);
+    localStorage.setItem("xosAccent",c.dataset.color);
+  });
+ }
+ if(appName==="clock"){
+  const bc=$("#bigClock"); const update=()=>{if(bc){const d=new Date();bc.textContent=`${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`}};update();
+ }
+}
+function openApp(name){
+ if(!unlocked) return;
+ currentApp=name; const d=apps[name]||apps.notes; appTitle.textContent=d.title; appContent.innerHTML=d.html;
+ home.classList.add("hidden"); app.classList.remove("hidden"); cc.classList.add("hidden"); priority.classList.add("hidden"); wireDynamic(name);
+}
+$$(".app").forEach(x=>x.onclick=()=>openApp(x.dataset.app));
+const saved=localStorage.getItem("xosAccent"); if(saved)document.documentElement.style.setProperty("--accent",saved);
+</script>
+</body>
+</html>
